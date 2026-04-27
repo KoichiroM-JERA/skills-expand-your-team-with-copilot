@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Animated Git-branch background -->
+    <canvas id="git-background"></canvas>
+
     <header>
       <h1>Mergington High School</h1>
       <h2>Extracurricular Activities</h2>
@@ -21,6 +24,13 @@
             <button id="logout-button">Logout</button>
           </div>
         </div>
+      </div>
+      <div class="header-mascots">
+        <img src="https://octodex.github.com/images/original-octocat.png" alt="Original Octocat mascot" title="Original Octocat" />
+        <img src="https://octodex.github.com/images/codercat.jpg" alt="Coder Cat mascot" title="Coder Cat" />
+        <img src="https://octodex.github.com/images/labtocat.png" alt="Lab Tocat mascot" title="Lab Tocat" />
+        <img src="https://octodex.github.com/images/droidtocat.png" alt="Droid Tocat mascot" title="Droid Tocat" />
+        <img src="https://octodex.github.com/images/topguntocat.png" alt="Top Gun Tocat mascot" title="Top Gun Tocat" />
       </div>
     </header>
 
@@ -169,5 +179,139 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+      // Animated Git-style branch lines background
+      (function () {
+        const canvas = document.getElementById("git-background");
+        const ctx = canvas.getContext("2d");
+
+        const LANE_COLOR = "rgba(118, 196, 66, 0.18)";
+        const NODE_COLOR = "rgba(118, 196, 66, 0.30)";
+        const LANE_COUNT = 5;
+        const COMMIT_SPACING = 90;  // vertical pixels between commits
+        const SCROLL_SPEED = 0.35; // pixels per frame
+        const NODE_RADIUS = 4;
+
+        let width, height, laneXPositions;
+
+        function resize() {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+          const margin = width * 0.08;
+          const gap = (width - margin * 2) / (LANE_COUNT - 1);
+          laneXPositions = Array.from({ length: LANE_COUNT }, (_, i) => margin + i * gap);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // Pre-generate a sequence of "graph rows"
+        // Each row: { lane, mergeFrom (lane index or null), mergeTo (lane index or null) }
+        const ROWS = 120;
+        const rows = [];
+        // Track which lanes are currently "active" (have a branch on them)
+        const active = Array(LANE_COUNT).fill(false);
+        active[2] = true; // main branch starts active
+
+        for (let i = 0; i < ROWS; i++) {
+          const row = { commits: [], connections: [] };
+
+          // Add commits on each active lane
+          active.forEach((on, l) => {
+            if (on) row.commits.push(l);
+          });
+
+          // Randomly branch off from or merge back into active lanes
+          const rand = Math.random();
+          if (rand < 0.12) {
+            // Branch off: pick a random active lane and an adjacent inactive lane
+            const activeLanes = active.map((a, i) => (a ? i : -1)).filter((i) => i >= 0);
+            const src = activeLanes[Math.floor(Math.random() * activeLanes.length)];
+            const candidates = [src - 1, src + 1].filter(
+              (l) => l >= 0 && l < LANE_COUNT && !active[l]
+            );
+            if (candidates.length) {
+              const dst = candidates[Math.floor(Math.random() * candidates.length)];
+              active[dst] = true;
+              row.connections.push({ from: src, to: dst });
+            }
+          } else if (rand < 0.22) {
+            // Merge back: pick a non-main active lane and merge into an adjacent active lane
+            const nonMain = active
+              .map((a, i) => (a && i !== 2 ? i : -1))
+              .filter((i) => i >= 0);
+            if (nonMain.length) {
+              const src = nonMain[Math.floor(Math.random() * nonMain.length)];
+              const candidates = [src - 1, src + 1].filter(
+                (l) => l >= 0 && l < LANE_COUNT && active[l] && l !== src
+              );
+              if (candidates.length) {
+                const dst = candidates[Math.floor(Math.random() * candidates.length)];
+                active[src] = false;
+                row.connections.push({ from: src, to: dst });
+              }
+            }
+          }
+
+          rows.push(row);
+        }
+
+        let scrollOffset = 0;
+
+        function drawRow(row, rowY) {
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = LANE_COLOR;
+
+          // Draw vertical lines for active commits
+          row.commits.forEach((lane) => {
+            const x = laneXPositions[lane];
+            // draw short vertical segment centered on rowY
+            ctx.beginPath();
+            ctx.moveTo(x, rowY - COMMIT_SPACING / 2);
+            ctx.lineTo(x, rowY + COMMIT_SPACING / 2);
+            ctx.stroke();
+
+            // Draw commit node
+            ctx.beginPath();
+            ctx.arc(x, rowY, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = NODE_COLOR;
+            ctx.fill();
+          });
+
+          // Draw branch/merge connections as curved lines
+          row.connections.forEach(({ from, to }) => {
+            const x1 = laneXPositions[from];
+            const x2 = laneXPositions[to];
+            ctx.beginPath();
+            ctx.moveTo(x1, rowY);
+            ctx.bezierCurveTo(
+              x1, rowY - COMMIT_SPACING * 0.4,
+              x2, rowY - COMMIT_SPACING * 0.6,
+              x2, rowY - COMMIT_SPACING / 2
+            );
+            ctx.stroke();
+          });
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, width, height);
+
+          scrollOffset = (scrollOffset + SCROLL_SPEED) % COMMIT_SPACING;
+
+          // Work out which rows are visible and draw them
+          const firstRowIndex = Math.floor(scrollOffset / COMMIT_SPACING);
+          const visibleRows = Math.ceil(height / COMMIT_SPACING) + 2;
+
+          for (let i = 0; i < visibleRows; i++) {
+            const rowIndex = (firstRowIndex + i) % ROWS;
+            const rowY = i * COMMIT_SPACING - (scrollOffset % COMMIT_SPACING);
+            drawRow(rows[rowIndex], rowY);
+          }
+
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      })();
+    </script>
   </body>
 </html>
