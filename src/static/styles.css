@@ -195,8 +195,8 @@ section h3 {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #e8eaf6;
-  color: #3949ab;
+  background: #edf8e3;
+  color: var(--primary-dark);
   font-size: 0.65rem;
   font-weight: bold;
   padding: 2px 6px;
@@ -532,7 +532,7 @@ footer {
 .search-box input:focus {
   outline: none;
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 2px rgba(83, 75, 174, 0.1);
+  box-shadow: 0 0 0 2px rgba(118, 196, 66, 0.2);
 }
 
 .search-box button {
