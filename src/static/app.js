@@ -569,6 +569,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-section">
+        <span class="share-label">Share:</span>
+        <button class="share-button share-twitter" data-activity="${name}" aria-label="Share on X (Twitter)">𝕏</button>
+        <button class="share-button share-whatsapp" data-activity="${name}" aria-label="Share on WhatsApp">💬</button>
+        <button class="share-button share-copy" data-activity="${name}" aria-label="Copy link">🔗</button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -586,6 +592,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    activityCard.querySelector(".share-twitter").addEventListener("click", () => {
+      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-whatsapp").addEventListener("click", () => {
+      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-copy").addEventListener("click", (event) => {
+      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.currentTarget;
+        btn.textContent = "✔";
+        btn.classList.add("share-copy-success");
+        setTimeout(() => {
+          btn.textContent = "🔗";
+          btn.classList.remove("share-copy-success");
+        }, 2000);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
