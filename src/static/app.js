@@ -594,27 +594,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add click handlers for share buttons
+    const shareText = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+
     activityCard.querySelector(".share-twitter").addEventListener("click", () => {
-      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
-      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
 
     activityCard.querySelector(".share-whatsapp").addEventListener("click", () => {
-      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
 
     activityCard.querySelector(".share-copy").addEventListener("click", (event) => {
-      const text = `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = event.currentTarget;
+      const btn = event.currentTarget;
+      navigator.clipboard.writeText(shareText).then(() => {
         btn.textContent = "✔";
         btn.classList.add("share-copy-success");
         setTimeout(() => {
           btn.textContent = "🔗";
           btn.classList.remove("share-copy-success");
+        }, 2000);
+      }).catch(() => {
+        btn.textContent = "✖";
+        setTimeout(() => {
+          btn.textContent = "🔗";
         }, 2000);
       });
     });
